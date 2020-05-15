@@ -33,7 +33,6 @@ jobs:
         path: ~/.cabal/store
         key: ${{ runner.os }}-${{ matrix.ghc }}-cabal
 
-    steps:
     - uses: pavpanchekha/setup-z3@v1.2
       name: setup z3
       with:
