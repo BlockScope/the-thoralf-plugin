@@ -9,8 +9,6 @@
 , license-file =
     "LICENSE"
 , tested-with = "GHC == 8.8.3"
-, extra-source-files =
-    [ "defaults.dhall", "package.dhall", "ChangeLog.md", "README.md" ]
 , ghc-options =
     [ "-Wall"
     , "-Werror"

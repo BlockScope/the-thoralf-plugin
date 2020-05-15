@@ -4,38 +4,29 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 12fc3226a94bfdc5df503cad0b52cf79661769da2faf4144766a9960a5902cfc
+-- hash: 73af09f780fc0a6f857fa2fb4e9549532f92c5c7017f04580846de70564e77d6
 
-name:                thoralf-plugin
-version:             0.1.0.0
-synopsis:            An extensible GHC typechecker plugin based on Z3
-description:         Thoralf is a small yet extensible typechecker plugin based on the
-                     Z3 SMT solver. It is designed to be easy to extend with new
-                     theories.
-license:             MIT
-license-file:        LICENSE
-tested-with:         GHC == 8.8.3
-author:              Divesh Otwani
-maintainer:          Ben Gamari
-category:            Development
-homepage:            https://github.com/bgamari/the-thoralf-plugin#readme
-bug-reports:         https://github.com/bgamari/the-thoralf-plugin/issues
-build-type:          Simple
-extra-source-files:
-    defaults.dhall
-    package.dhall
-    ChangeLog.md
-    README.md
+name:           thoralf-plugin
+version:        0.1.0.0
+synopsis:       An extensible GHC typechecker plugin based on Z3
+description:    Thoralf is a small yet extensible typechecker plugin based on the
+                Z3 SMT solver. It is designed to be easy to extend with new
+                theories.
+category:       Development
+homepage:       https://github.com/bgamari/the-thoralf-plugin#readme
+bug-reports:    https://github.com/bgamari/the-thoralf-plugin/issues
+author:         Divesh Otwani
+maintainer:     Ben Gamari
+license:        MIT
+license-file:   LICENSE
+tested-with:    GHC == 8.8.3
+build-type:     Simple
 
 source-repository head
   type: git
   location: https://github.com/bgamari/the-thoralf-plugin
 
 library
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -fno-warn-partial-type-signatures
-  default-language: Haskell2010
   exposed-modules:
       ThoralfPlugin.Plugin
       ThoralfPlugin.ThoralfPlugin
@@ -57,6 +48,9 @@ library
       ThoralfPlugin.Encode.TheoryEncoding
       ThoralfPlugin.Encode.UoM
       Paths_thoralf_plugin
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fno-warn-partial-type-signatures
   build-depends:
       base >=4.10.1.0 && <5
     , containers
@@ -65,6 +59,7 @@ library
     , hashable
     , mtl
     , simple-smt
+  default-language: Haskell2010
 
 test-suite rows
   type: exitcode-stdio-1.0
