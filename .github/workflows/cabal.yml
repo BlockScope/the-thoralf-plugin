@@ -35,6 +35,8 @@ jobs:
 
     - name: build
       run: |
+        # SEE: https://github.com/LeventErkok/sbv/blob/d0931e8305300551992c668468485288cc5bf28c/.travis.yml#L52-L55
+        - curl -fsSL https://github.com/Z3Prover/z3/releases/download/Nightly/z3-4.8.9-x64-ubuntu-16.04.zip -o z3-4.8.9-x64-ubuntu-16.04.zip; unzip -j z3-4.8.9-x64-ubuntu-16.04.zip -d z3_downloaded; export PATH=$PATH:$(pwd)/z3_downloaded; z3 --version; fi
         cabal v2-update
         cabal v2-build all --enable-tests
 
