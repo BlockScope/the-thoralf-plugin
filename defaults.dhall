@@ -1,0 +1,26 @@
+{ version =
+    "0.1.0.0"
+, author =
+    "Divesh Otwani"
+, maintainer =
+    "Ben Gamari"
+, license =
+    "MIT"
+, license-file =
+    "LICENSE"
+, tested-with =
+    "GHC == 8.4.3"
+, extra-source-files =
+    [ "defaults.dhall", "package.dhall", "ChangeLog.md", "README.md" ]
+, ghc-options =
+    [ "-Wall"
+    , "-Werror"
+    , "-Wincomplete-uni-patterns"
+    , "-Wcompat"
+    , "-Widentities"
+    , "-Wredundant-constraints"
+    , "-fhide-source-paths"
+    ]
+, dependencies =
+    [ "base >=4.10.1.0 && <5" ]
+}
