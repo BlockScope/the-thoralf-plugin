@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 01b007e25c19a0a2fa3ce686f0930116d0b8117f9cda3b8289c9267b1bd059cc
+-- hash: 12fc3226a94bfdc5df503cad0b52cf79661769da2faf4144766a9960a5902cfc
 
 name:                thoralf-plugin
 version:             0.1.0.0
@@ -14,7 +14,7 @@ description:         Thoralf is a small yet extensible typechecker plugin based 
                      theories.
 license:             MIT
 license-file:        LICENSE
-tested-with:         GHC == 8.4.3
+tested-with:         GHC == 8.8.3
 author:              Divesh Otwani
 maintainer:          Ben Gamari
 category:            Development

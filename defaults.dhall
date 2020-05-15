@@ -8,8 +8,7 @@
     "MIT"
 , license-file =
     "LICENSE"
-, tested-with =
-    "GHC == 8.4.3"
+, tested-with = "GHC == 8.8.3"
 , extra-source-files =
     [ "defaults.dhall", "package.dhall", "ChangeLog.md", "README.md" ]
 , ghc-options =
