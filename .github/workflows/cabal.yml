@@ -22,7 +22,7 @@ jobs:
         submodules: true
 
     - uses: actions/setup-haskell@v1
-      name: Setup GHC and cabal-install
+      name: setup GHC and cabal-install
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
@@ -33,10 +33,14 @@ jobs:
         path: ~/.cabal/store
         key: ${{ runner.os }}-${{ matrix.ghc }}-cabal
 
+    steps:
+    - uses: pavpanchekha/setup-z3@v1.2
+      name: setup z3
+      with:
+        version: "4.8.9"
+
     - name: build
       run: |
-        # SEE: https://github.com/LeventErkok/sbv/blob/d0931e8305300551992c668468485288cc5bf28c/.travis.yml#L52-L55
-        - curl -fsSL https://github.com/Z3Prover/z3/releases/download/Nightly/z3-4.8.9-x64-ubuntu-16.04.zip -o z3-4.8.9-x64-ubuntu-16.04.zip; unzip -j z3-4.8.9-x64-ubuntu-16.04.zip -d z3_downloaded; export PATH=$PATH:$(pwd)/z3_downloaded; z3 --version; fi
         cabal v2-update
         cabal v2-build all --enable-tests
 
