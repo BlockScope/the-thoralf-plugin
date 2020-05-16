@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
@@ -23,7 +24,7 @@ module ThoralfPlugin.Encode.TheoryEncoding
 where
 
 import Control.Applicative ((<|>))
-import Data.Vec
+import Data.Vec (Vec(..), Nat(..))
 import TcRnTypes (TcPluginM)
 import Type (Kind, TyVar, Type)
 
@@ -38,7 +39,6 @@ data TheoryEncoding where
     { kindConvs :: [Type -> Maybe KdConvCont],
       typeConvs :: [Type -> Maybe TyConvCont],
       startDecs :: [String], -- ^ Top level, never changing declarations
-
       tyVarPreds :: TyVar -> Maybe [String]
     } ->
     TheoryEncoding
@@ -97,7 +97,6 @@ data DecCont where
     } ->
     DecCont
 
-
 -- | Combining monadic theory encodings.
 sumEncodings :: [TcPluginM TheoryEncoding] -> TcPluginM TheoryEncoding
 sumEncodings = fmap (foldl addEncodings emptyTheory) . sequence
@@ -113,10 +112,12 @@ emptyTheory =
     }
 
 addEncodings :: TheoryEncoding -> TheoryEncoding -> TheoryEncoding
-addEncodings encode1 encode2 =
-  TheoryEncoding
-    { typeConvs = typeConvs encode1 ++ typeConvs encode2,
-      kindConvs = kindConvs encode1 ++ kindConvs encode2,
-      startDecs = startDecs encode1 ++ startDecs encode2,
-      tyVarPreds = \tvar -> (tyVarPreds encode1 tvar <|> tyVarPreds encode2 tvar)
-    }
+addEncodings
+  TheoryEncoding{typeConvs = t1, kindConvs = k1, startDecs = s1, tyVarPreds = p1}
+  TheoryEncoding{typeConvs = t2, kindConvs = k2, startDecs = s2, tyVarPreds = p2} =
+  TheoryEncoding{typeConvs = t', kindConvs = k', startDecs = s', tyVarPreds = p'}
+  where
+    t' = t1 ++ t2
+    k' = k1 ++ k2
+    s' = s1 ++ s2
+    p' tvar = p1 tvar <|> p2 tvar
