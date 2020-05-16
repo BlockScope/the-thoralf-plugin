@@ -29,11 +29,8 @@ in    defs
               , "ThoralfPlugin.Convert"
               , "ThoralfPlugin.Variables"
               , "ThoralfPlugin.Singletons.Symbol"
-              , "ThoralfPlugin.Singletons.Nat"
               , "ThoralfPlugin.Theory.DisEq"
-              , "ThoralfPlugin.Theory.FiniteMap"
               , "ThoralfPlugin.Theory.UoM"
-              , "ThoralfPlugin.Theory.Bool"
               ]
           }
       , tests =
