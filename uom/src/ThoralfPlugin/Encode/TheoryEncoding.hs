@@ -1,37 +1,37 @@
-{-# LANGUAGE TypeFamilies       #-}
-{-# LANGUAGE TypeInType         #-}
-{-# LANGUAGE TypeOperators      #-}
-{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE TypeOperators #-}
 
 module ThoralfPlugin.Encode.TheoryEncoding
-  ( TheoryEncoding (..)
-  , emptyTheory
-  , TyConvCont (..)
-  , KdConvCont (..)
-  , DecCont (..)
-  , sumEncodings
+  ( TheoryEncoding (..),
+    emptyTheory,
+    TyConvCont (..),
+    KdConvCont (..),
+    DecCont (..),
+    sumEncodings,
+    Vec (..),
+    Nat (..),
+  )
+where
 
-  , Vec(..)
-  , Nat(..)
-  ) where
-
-
-import Control.Applicative ( (<|>) )
-import Type ( Type, Kind, TyVar )
-import TcRnTypes( TcPluginM )
+import Control.Applicative ((<|>))
 import Data.Vec
-
-
+import TcRnTypes (TcPluginM)
+import Type (Kind, TyVar, Type)
 
 -- | See $theoryEncoding
 data TheoryEncoding where
   TheoryEncoding ::
-    { kindConvs :: [Type -> Maybe KdConvCont]
-    , typeConvs :: [Type -> Maybe TyConvCont]
-    , startDecs :: [String]      -- Top level, never changing declarations
-    , tyVarPreds :: TyVar -> Maybe [String] -- ^ See $tvpred
-    } -> TheoryEncoding
+    { kindConvs :: [Type -> Maybe KdConvCont],
+      typeConvs :: [Type -> Maybe TyConvCont],
+      startDecs :: [String], -- Top level, never changing declarations
+
+      -- | See $tvpred
+      tyVarPreds :: TyVar -> Maybe [String]
+    } ->
+    TheoryEncoding
 
 -- $theoryEncoding
 --
@@ -58,32 +58,33 @@ data TheoryEncoding where
 -- SMT integers, asserting each integer variable is larger than zero is
 -- sensible.
 
-
 -- | A Kind Conversion Continuation
 data KdConvCont where
   KdConvCont ::
-    { kdConvKinds :: Vec m Kind
-    , kdConvCont :: Vec m String -> String
-    } -> KdConvCont
-
+    { kdConvKinds :: Vec m Kind,
+      kdConvCont :: Vec m String -> String
+    } ->
+    KdConvCont
 
 -- | A Type Conversion Continuation
 data TyConvCont where
   TyConvCont ::
-    { tyConvTypes :: Vec n Type
-    , tyConvKinds :: Vec m Kind
-    , tyConvCont :: Vec n String -> Vec m String -> String
-    , tyConvDecs :: [DecCont]
-    } -> TyConvCont
+    { tyConvTypes :: Vec n Type,
+      tyConvKinds :: Vec m Kind,
+      tyConvCont :: Vec n String -> Vec m String -> String,
+      tyConvDecs :: [DecCont]
+    } ->
+    TyConvCont
 
 -- $decCont
+
 data DecCont where
   DecCont ::
-    { decContKds :: Vec n Kind
-    , decContHash :: String
-    , decCont :: Vec n String -> [String]
-    } -> DecCont
-
+    { decContKds :: Vec n Kind,
+      decContHash :: String,
+      decCont :: Vec n String -> [String]
+    } ->
+    DecCont
 
 -- $decCont
 --
@@ -101,36 +102,28 @@ data DecCont where
 -- the converted list of kinds along with the given hash to ensure no
 -- declarations are repeated.
 
-
-
-
-
 -- * Helpful functions
 --------------------------------------------------------------------------------
-
 
 -- | Combining monadic theory encodings
 sumEncodings :: [TcPluginM TheoryEncoding] -> TcPluginM TheoryEncoding
 sumEncodings = fmap (foldl addEncodings emptyTheory) . sequence
 
-
 -- | An empty theory from which you can build any theory.
 emptyTheory :: TheoryEncoding
-emptyTheory = TheoryEncoding
-  { typeConvs = []
-  , kindConvs = []
-  , startDecs = []
-  , tyVarPreds = const Nothing
-  }
+emptyTheory =
+  TheoryEncoding
+    { typeConvs = [],
+      kindConvs = [],
+      startDecs = [],
+      tyVarPreds = const Nothing
+    }
 
 addEncodings :: TheoryEncoding -> TheoryEncoding -> TheoryEncoding
-addEncodings encode1 encode2 = TheoryEncoding
-  { typeConvs = typeConvs encode1 ++ typeConvs encode2
-  , kindConvs = kindConvs encode1 ++ kindConvs encode2
-  , startDecs = startDecs encode1 ++ startDecs encode2
-  , tyVarPreds =
-      \tvar -> (tyVarPreds encode1 tvar <|> tyVarPreds encode2 tvar)
-  }
-
-
-
+addEncodings encode1 encode2 =
+  TheoryEncoding
+    { typeConvs = typeConvs encode1 ++ typeConvs encode2,
+      kindConvs = kindConvs encode1 ++ kindConvs encode2,
+      startDecs = startDecs encode1 ++ startDecs encode2,
+      tyVarPreds = \tvar -> (tyVarPreds encode1 tvar <|> tyVarPreds encode2 tvar)
+    }

@@ -1,21 +1,28 @@
-{-# LANGUAGE TypeFamilies, TypeInType, TypeOperators,
-    GADTs, RecordWildCards, StandaloneDeriving
-#-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE TypeOperators #-}
 
-module ThoralfPlugin.Encode.UoM ( uomTheory ) where
+module ThoralfPlugin.Encode.UoM
+  ( uomTheory,
+  )
+where
 
-import TyCon ( TyCon(..) )
-import Type ( Type, splitTyConApp_maybe )
-import TcPluginM ( tcLookupTyCon, lookupOrig
-                 , findImportedModule, FindResult(..)
-                 , TcPluginM
-                 )
-import OccName ( mkTcOcc )
-import Module ( Module, mkModuleName )
-import FastString ( fsLit )
-
+import FastString (fsLit)
+import Module (Module, mkModuleName)
+import OccName (mkTcOcc)
+import TcPluginM
+  ( FindResult (..),
+    TcPluginM,
+    findImportedModule,
+    lookupOrig,
+    tcLookupTyCon,
+  )
 import ThoralfPlugin.Encode.TheoryEncoding
-
+import TyCon (TyCon (..))
+import Type (Type, splitTyConApp_maybe)
 
 uomTheory :: TcPluginM TheoryEncoding
 uomTheory = do
@@ -30,40 +37,36 @@ uomTheory = do
     fmModName = mkModuleName "ThoralfPlugin.Theory.UoM"
     pkg = fsLit "thoralf-plugin"
 
-
-
 findTyCon :: Module -> String -> TcPluginM TyCon
 findTyCon md strNm = do
-    name <- lookupOrig md (mkTcOcc strNm)
-    tcLookupTyCon name
-
+  name <- lookupOrig md (mkTcOcc strNm)
+  tcLookupTyCon name
 
 mkUoMEncoding :: TyCon -> TyCon -> TyCon -> TyCon -> TyCon -> TheoryEncoding
-mkUoMEncoding base one div' mult uom =  emptyTheory
-  { typeConvs =
-    [ baseConvert base
-    , oneConvert one
-    , divConvert div'
-    , mulConvert mult
-    ]
-  , kindConvs = [uomConvert uom]
-  }
-
+mkUoMEncoding base one div' mult uom =
+  emptyTheory
+    { typeConvs =
+        [ baseConvert base,
+          oneConvert one,
+          divConvert div',
+          mulConvert mult
+        ],
+      kindConvs = [uomConvert uom]
+    }
 
 baseConvert :: TyCon -> Type -> Maybe TyConvCont
 baseConvert base ty = do
   (tcon, (measure : power : _)) <- splitTyConApp_maybe ty
   case tcon == base of
     False -> Nothing
-    True -> let tyList =  measure :> power :> VNil in
-      Just $ TyConvCont tyList VNil baseString []
-
+    True ->
+      let tyList = measure :> power :> VNil
+       in Just $ TyConvCont tyList VNil baseString []
 
 baseString :: Vec Two String -> Vec 'Zero String -> String
 baseString (measure :> power :> VNil) VNil =
-  let one = "((as const (Array String Int)) 0)" in
-  "(store " ++ one ++ " " ++ measure ++ " " ++ power ++ ")"
-
+  let one = "((as const (Array String Int)) 0)"
+   in "(store " ++ one ++ " " ++ measure ++ " " ++ power ++ ")"
 
 oneConvert :: TyCon -> Type -> Maybe TyConvCont
 oneConvert one ty = do
@@ -71,10 +74,8 @@ oneConvert one ty = do
   case tcon == one of
     False -> Nothing
     True ->
-      let one' = "((as const (Array String Int)) 0)" in
-      Just $ TyConvCont VNil VNil (const . const $ one') []
-
-
+      let one' = "((as const (Array String Int)) 0)"
+       in Just $ TyConvCont VNil VNil (const . const $ one') []
 
 divConvert :: TyCon -> Type -> Maybe TyConvCont
 divConvert divTycon ty = do
@@ -82,16 +83,14 @@ divConvert divTycon ty = do
   case tcon == divTycon of
     False -> Nothing
     True ->
-      let tyList = n :> m :> VNil in
-      Just $ TyConvCont tyList VNil divString []
-
+      let tyList = n :> m :> VNil
+       in Just $ TyConvCont tyList VNil divString []
 
 type Two = 'Succ ('Succ 'Zero)
+
 divString :: Vec Two String -> Vec 'Zero String -> String
 divString (n :> m :> VNil) VNil =
-    "((_ map (- (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
-
-
+  "((_ map (- (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
 
 mulConvert :: TyCon -> Type -> Maybe TyConvCont
 mulConvert mult ty = do
@@ -99,15 +98,12 @@ mulConvert mult ty = do
   case tcon == mult of
     False -> Nothing
     True ->
-      let tyList = n :> m :> VNil in
-      Just $ TyConvCont tyList VNil mulString []
-
+      let tyList = n :> m :> VNil
+       in Just $ TyConvCont tyList VNil mulString []
 
 mulString :: Vec Two String -> Vec 'Zero String -> String
 mulString (n :> m :> VNil) VNil =
-    "((_ map (+ (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
-
-
+  "((_ map (+ (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
 
 uomConvert :: TyCon -> Type -> Maybe KdConvCont
 uomConvert uom ty = do
@@ -115,5 +111,3 @@ uomConvert uom ty = do
   case tcon == uom of
     False -> Nothing
     True -> Just $ KdConvCont VNil (const "(Array String Int)")
-
-

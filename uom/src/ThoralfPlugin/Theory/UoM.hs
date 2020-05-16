@@ -1,14 +1,23 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wunused-top-binds #-}
-{-# LANGUAGE TypeFamilies, TypeInType,
- TypeOperators, GADTs, UndecidableInstances,
- RankNTypes, KindSignatures
- #-}
-module ThoralfPlugin.Theory.UoM (
-  UoM, FromList,
-  One, IsBase, IsProd, IsDiv
-  ) where
 
-import Data.Kind ( Constraint )
+module ThoralfPlugin.Theory.UoM
+  ( UoM,
+    FromList,
+    One,
+    IsBase,
+    IsProd,
+    IsDiv,
+  )
+where
+
+import Data.Kind (Constraint)
 import GHC.TypeLits
 
 {-
@@ -18,33 +27,30 @@ In this module the unit of measure interface is declared.
 
 -}
 
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+-- DATA DEFINITIONS --
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+
+data UoM
 
 ----------------------------------------------------------------------------
 ----------------------------------------------------------------------------
-                          -- DATA DEFINITIONS --
-----------------------------------------------------------------------------
-----------------------------------------------------------------------------
-
-
-data UoM where {}
-
-
-----------------------------------------------------------------------------
-----------------------------------------------------------------------------
-                          -- THE EXPOSED GRAMMAR --
+-- THE EXPOSED GRAMMAR --
 ----------------------------------------------------------------------------
 ----------------------------------------------------------------------------
 
 -- The Encoding
-type family One :: UoM where {}
+type family One :: UoM where
 
-type family Base (measure :: Symbol) (power :: Nat) :: UoM where {}
+type family Base (measure :: Symbol) (power :: Nat) :: UoM where
 
-type family (*:) (a :: UoM) (b :: UoM) :: UoM where {}
+type family (*:) (a :: UoM) (b :: UoM) :: UoM where
 
-type family (/:) (n :: UoM) (d :: UoM) :: UoM where {}
+type family (/:) (n :: UoM) (d :: UoM) :: UoM where
+
 ------------------------------------------------------------------------
-
 
 -- Interface
 type family IsBase (measure :: Symbol) (power :: Nat) (b :: UoM) :: Constraint where
@@ -56,12 +62,7 @@ type family IsProd (a :: UoM) (b :: UoM) (aTimesb :: UoM) :: Constraint where
 type family IsDiv (a :: UoM) (b :: UoM) (aDivb :: UoM) :: Constraint where
   IsDiv a b c = (c ~ (a /: b))
 
-type family FromList (xs :: [(Symbol,Nat)]) :: UoM where
+type family FromList (xs :: [(Symbol, Nat)]) :: UoM where
   FromList '[] = One
-  FromList ('(u,i) ': ys) = (Base u i) *: (FromList ys)
-
+  FromList ('(u, i) ': ys) = (Base u i) *: (FromList ys)
 ------------------------------------------------------------------------
-
-
-
-

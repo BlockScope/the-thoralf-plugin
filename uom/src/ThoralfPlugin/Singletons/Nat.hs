@@ -1,29 +1,27 @@
-{-# OPTIONS_GHC -Wunused-top-binds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wunused-top-binds #-}
 
 module ThoralfPlugin.Singletons.Nat
-  ( SNat (..)
-  , NatComp (..)
-  , natComp
+  ( SNat (..),
+    NatComp (..),
+    natComp,
   )
 where
 
+import Data.Kind (Constraint, Type)
+import GHC.TypeLits (KnownNat, Nat, natVal)
 import ThoralfPlugin.Theory.Bool
-
-import Data.Kind ( Constraint, Type )
-import GHC.TypeLits ( Nat, natVal, KnownNat )
 import Unsafe.Coerce
-
 
 data SNat :: Nat -> Type where
   SNat :: KnownNat n => SNat n
@@ -47,6 +45,3 @@ forceCT x = case unsafeCoerce (Dict :: Dict ()) :: Dict c of
 
 data Dict :: Constraint -> Type where
   Dict :: a => Dict a
-
-
-

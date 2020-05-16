@@ -1,10 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
-import Test.Tasty.TH
 import Test.Tasty.QuickCheck
+import Test.Tasty.TH
 import Text.Printf (printf)
-import UoM (Unit(..), extract, calcDistance)
+import UoM (Unit (..), calcDistance, extract)
 
 main :: IO ()
 main = do

@@ -1,85 +1,84 @@
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE TypeFamilies       #-}
-{-# LANGUAGE TypeInType         #-}
-{-# LANGUAGE TypeOperators      #-}
-{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
-
-
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-
-module ThoralfPlugin.ThoralfPlugin ( thoralfPlugin ) where
+module ThoralfPlugin.ThoralfPlugin
+  ( thoralfPlugin,
+  )
+where
 
 -- Simple imports:
-import Prelude hiding ( showList )
-import FastString ( fsLit )
-import Data.Maybe ( mapMaybe )
-import Data.List ( intersperse, (\\) )
-import qualified Data.Map.Strict as M
-import qualified Data.Set as Set
-import qualified SimpleSMT as SMT
-import Class ( Class(..) )
-import System.IO.Error
-import Data.IORef ( IORef )
 
-
+import Class (Class (..))
 -- GHC API imports:
-import GhcPlugins ( getUnique, getOccName )
-import TcPluginM ( tcPluginIO, lookupOrig, tcLookupClass
-                 , findImportedModule, FindResult(..), zonkCt
-                 , unsafeTcPluginTcM )
+
+import Coercion (Role (..), mkUnivCo)
+import Data.IORef (IORef)
+import Data.List ((\\), intersperse)
+import qualified Data.Map.Strict as M
+import Data.Maybe (mapMaybe)
+import qualified Data.Set as Set
+import FastString (fsLit)
+import GhcPlugins (getOccName, getUnique)
+import IOEnv (newMutVar, readMutVar, writeMutVar)
+import Module (Module, mkModuleName)
+import OccName (mkTcOcc, occNameString)
+import Outputable (ppr, showSDocUnsafe)
+import qualified SimpleSMT as SMT
+import System.IO.Error
+import TcEvidence (EvTerm (..), evCoercion)
+import TcPluginM
+  ( FindResult (..),
+    findImportedModule,
+    lookupOrig,
+    tcLookupClass,
+    tcPluginIO,
+    unsafeTcPluginTcM,
+    zonkCt,
+  )
 import TcRnTypes
-  ( WantedConstraints, Ct, TcPluginM, TcPluginResult (..)
-  , TcPlugin (..) )
-import TcType ( isMetaTyVar )
-
-#if __GLASGOW_HASKELL__ > 804
-import TcEvidence ( EvTerm(..), evCoercion )
-#else
-import TcEvidence ( EvTerm(..) )
-#endif
-
-import TyCoRep ( UnivCoProvenance(..) )
-import Coercion ( mkUnivCo, Role(..)  )
-import Type ( Type, splitTyConApp_maybe, getTyVar_maybe )
-import TyCon ( TyCon )
-import Var ( Var, isTcTyVar )
-import Module ( Module, mkModuleName )
-import OccName ( mkTcOcc, occNameString )
-import Outputable ( showSDocUnsafe, ppr )
-import IOEnv ( newMutVar, readMutVar, writeMutVar )
-
-
+  ( Ct,
+    TcPlugin (..),
+    TcPluginM,
+    TcPluginResult (..),
+    WantedConstraints,
+  )
+import TcType (isMetaTyVar)
 -- Internal Imports
 import ThoralfPlugin.Convert --( convertor, maybeExtractTyEq )
-import ThoralfPlugin.Encode.TheoryEncoding ( TheoryEncoding (..) )
-
+import ThoralfPlugin.Encode.TheoryEncoding (TheoryEncoding (..))
+import TyCoRep (UnivCoProvenance (..))
+import TyCon (TyCon)
+import Type (Type, getTyVar_maybe, splitTyConApp_maybe)
+import Var (Var, isTcTyVar)
+import Prelude hiding (showList)
 
 -- Renaming
 type Set = Set.Set
+
 type Map = M.Map
-
-
 
 data ThoralfState where
   ThoralfState ::
-    { smtSolver :: IORef SMT.Solver
-    , theoryEncoding :: TheoryEncoding
-    , disEqClass :: Class
-    } -> ThoralfState
-
+    { smtSolver :: IORef SMT.Solver,
+      theoryEncoding :: TheoryEncoding,
+      disEqClass :: Class
+    } ->
+    ThoralfState
 
 type Debug = Bool
 
 thoralfPlugin :: Debug -> TcPluginM TheoryEncoding -> TcPlugin
-thoralfPlugin debug seed = TcPlugin
-  { tcPluginInit = mkThoralfInit debug seed
-  , tcPluginSolve = thoralfSolver debug  -- Debug flag
-  , tcPluginStop = thoralfStop
-  }
-
+thoralfPlugin debug seed =
+  TcPlugin
+    { tcPluginInit = mkThoralfInit debug seed,
+      tcPluginSolve = thoralfSolver debug, -- Debug flag
+      tcPluginStop = thoralfStop
+    }
 
 mkThoralfInit :: Debug -> TcPluginM TheoryEncoding -> TcPluginM ThoralfState
 mkThoralfInit debug seed = do
@@ -95,23 +94,16 @@ mkThoralfInit debug seed = do
     return z3Solver
   solverRef <- unsafeTcPluginTcM $ newMutVar z3Solver
   return $ ThoralfState solverRef encoding disEq
-
   where
-
     disEqName = mkModuleName "ThoralfPlugin.Theory.DisEq"
     pkgName = fsLit "thoralf-plugin"
-
     findClass :: Module -> String -> TcPluginM Class
     findClass md strNm = do
-        name <- lookupOrig md (mkTcOcc strNm)
-        tcLookupClass name
-
-    solverOpts = [ "-smt2", "-in" ]
-
+      name <- lookupOrig md (mkTcOcc strNm)
+      tcLookupClass name
+    solverOpts = ["-smt2", "-in"]
     grabSMTsolver :: SMT.Logger -> IO SMT.Solver
     grabSMTsolver logger = SMT.newSolver "z3" solverOpts (Just logger)
-
-
 
 thoralfStop :: ThoralfState -> TcPluginM ()
 thoralfStop (ThoralfState {smtSolver = solverRef}) = do
@@ -119,10 +111,13 @@ thoralfStop (ThoralfState {smtSolver = solverRef}) = do
   _ <- tcPluginIO (SMT.stop solver)
   return ()
 
-
-
-thoralfSolver :: Debug ->
-  ThoralfState -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
+thoralfSolver ::
+  Debug ->
+  ThoralfState ->
+  [Ct] ->
+  [Ct] ->
+  [Ct] ->
+  TcPluginM TcPluginResult
 thoralfSolver debug (ThoralfState smtRef encode deCls) gs' ws' ds' = do
   -- Refresh the solver
   _ <- refresh encode smtRef debug
@@ -157,7 +152,7 @@ thoralfSolver debug (ThoralfState smtRef encode deCls) gs' ws' ds' = do
         _ <- traverse (SMT.assert smt . fst) gExprs
         SMT.check smt
       case givenCheck of
-        SMT.Unknown ->  tcPluginIO pop >> noSolving
+        SMT.Unknown -> tcPluginIO pop >> noSolving
         SMT.Unsat -> do
           tcPluginIO $
             putStrLn "\nInconsistent Givens" >> pop
@@ -189,26 +184,20 @@ refresh encoding solverRef debug = do
     _ <- traverse (SMT.ackCommand z3Solver) $ map SMT.Atom decs
     SMT.push z3Solver
     return z3Solver
-  unsafeTcPluginTcM $ writeMutVar solverRef z3Solver where
-
-  typeDataType = SMT.Atom typeData
-
-  typeData =
+  unsafeTcPluginTcM $ writeMutVar solverRef z3Solver
+  where
+    typeDataType = SMT.Atom typeData
+    typeData =
       -- As one long line to avoid problems with CPP and string gaps.
       "(declare-datatypes () ((Type (apply (fst Type) (snd Type)) (lit (getstr String)))))"
-
-  grabSMTsolver :: SMT.Logger -> IO SMT.Solver
-  grabSMTsolver logger = SMT.newSolver "z3" solverOpts (Just logger)
-
-  solverOpts = [ "-smt2", "-in" ]
-
+    grabSMTsolver :: SMT.Logger -> IO SMT.Solver
+    grabSMTsolver logger = SMT.newSolver "z3" solverOpts (Just logger)
+    solverOpts = ["-smt2", "-in"]
 
 isEqCt :: Class -> Ct -> Bool
 isEqCt diseq ct = case (maybeExtractTyEq ct, maybeExtractTyDisEq diseq ct) of
   (Nothing, Nothing) -> False
   _ -> True
-
-
 
 -- * Solver Helper Functions
 --------------------------------------------------------------------------------
@@ -218,22 +207,23 @@ isEqCt diseq ct = case (maybeExtractTyEq ct, maybeExtractTyDisEq diseq ct) of
 
 addEvTerm :: Ct -> Maybe (EvTerm, Ct)
 addEvTerm ct = do
-  ((t1,t2),ct') <- maybeExtractTyEq ct
+  ((t1, t2), ct') <- maybeExtractTyEq ct
   -- We never have a wanted disequality.
-  return (makeEqEvidence "Fm Plugin" (t1,t2), ct')
-
+  return (makeEqEvidence "Fm Plugin" (t1, t2), ct')
 
 printParsedInputs :: Bool -> [SExpr] -> SExpr -> [SExpr] -> TcPluginM ()
 printParsedInputs True gSExpr wSExpr parseDeclrs = do
   tcPluginIO $ do
-    putStrLn $ "Given SExpr: \n" ++
-      (show $ map (`SMT.showsSExpr`  "") gSExpr)
-    putStrLn $ "Wanted SExpr: \n" ++
-      (SMT.showsSExpr wSExpr "")
-    putStrLn $ "Variable Decs: \n" ++
-      (show $ map (`SMT.showsSExpr`  "") parseDeclrs)
+    putStrLn $
+      "Given SExpr: \n"
+        ++ (show $ map (`SMT.showsSExpr` "") gSExpr)
+    putStrLn $
+      "Wanted SExpr: \n"
+        ++ (SMT.showsSExpr wSExpr "")
+    putStrLn $
+      "Variable Decs: \n"
+        ++ (show $ map (`SMT.showsSExpr` "") parseDeclrs)
 printParsedInputs False _ _ _ = return ()
-
 
 printCts :: Bool -> Bool -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
 printCts True bool gs ws ds = do
@@ -249,40 +239,26 @@ printCts True bool gs ws ds = do
   return $ TcPluginOk [] []
 printCts False _ _ _ _ = return $ TcPluginOk [] []
 
-
-
 debugIO :: Bool -> String -> TcPluginM ()
 debugIO False _ = return ()
 debugIO True s = tcPluginIO $ putStrLn s
 
-
 zonkEverything :: [Ct] -> TcPluginM [Ct]
 zonkEverything [] = return []
-zonkEverything (x:xs) = do
+zonkEverything (x : xs) = do
   c <- zonkCt x
   cs <- zonkEverything xs
-  return (c:cs)
-
-
+  return (c : cs)
 
 -- make EvTerms for any two types
 -- Give the types inside a Predtree of the form (EqPred NomEq t1 t2)
 makeEqEvidence :: String -> (Type, Type) -> EvTerm
-makeEqEvidence s (t1,t2) =
-#if __GLASGOW_HASKELL__ > 804
-  evCoercion
-#else
-  EvCoercion
-#endif
-  $ mkUnivCo (PluginProv s) Nominal t1 t2
-
-
-
-
+makeEqEvidence s (t1, t2) =
+  evCoercion $
+    mkUnivCo (PluginProv s) Nominal t1 t2
 
 -- *  Printing
 --------------------------------------------------------------------------------
-
 
 instance Show Type where
   show ty = case splitTyConApp_maybe ty of
@@ -293,16 +269,14 @@ instance Show Type where
         Nothing ->
           showSDocUnsafe $ ppr ty
 
-
 instance Show TyCon where
   show = occNameString . getOccName
 
-
 instance Show Var where
-  show v = nicename ++ ":" ++  classify where
-
-    nicename = varOccName v ++ ";" ++ varUnique v
-    classify = classifyVar v
+  show v = nicename ++ ":" ++ classify
+    where
+      nicename = varOccName v ++ ";" ++ varUnique v
+      classify = classifyVar v
 
 varOccName :: Var -> String
 varOccName = showSDocUnsafe . ppr . getOccName
@@ -311,18 +285,17 @@ varUnique :: Var -> String
 varUnique = show . getUnique
 
 classifyVar :: Var -> String
-classifyVar v | isTcTyVar v = case isMetaTyVar v of
-                  True ->  "t"
-                  False -> "s"
-              | otherwise = "irr"
+classifyVar v
+  | isTcTyVar v = case isMetaTyVar v of
+    True -> "t"
+    False -> "s"
+  | otherwise = "irr"
 
-
-
-showTupList :: (Show a, Show b) => [(a,b)] -> String
+showTupList :: (Show a, Show b) => [(a, b)] -> String
 showTupList xs =
   "[\n" ++ concat (intersperse "\n" (map mkEquality xs)) ++ "\n]"
   where
-    mkEquality (a,b) = (show a) ++ " ~ " ++ (show b)
+    mkEquality (a, b) = (show a) ++ " ~ " ++ (show b)
 
 showList :: Show a => [a] -> String
 showList xs =
@@ -330,7 +303,7 @@ showList xs =
 
 instance Show Ct where
   show ct = case maybeExtractTyEq ct of
-    Just ((t1,t2),_) -> show (t1,t2)
+    Just ((t1, t2), _) -> show (t1, t2)
     Nothing -> showSDocUnsafe $ ppr $ ct
 
 instance Show WantedConstraints where
@@ -338,6 +311,3 @@ instance Show WantedConstraints where
 
 instance Show EvTerm where
   show = showSDocUnsafe . ppr
-
-
-
