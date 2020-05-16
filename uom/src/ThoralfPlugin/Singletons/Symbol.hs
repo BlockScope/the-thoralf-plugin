@@ -9,7 +9,6 @@
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wunused-top-binds #-}
 
 module ThoralfPlugin.Singletons.Symbol
   ( SSymbol (..),

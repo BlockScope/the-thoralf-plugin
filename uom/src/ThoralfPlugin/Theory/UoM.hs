@@ -5,7 +5,6 @@
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wunused-top-binds #-}
 
 module ThoralfPlugin.Theory.UoM
   ( UoM,

@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC -fplugin ThoralfPlugin.Plugin #-}
 
 module UoM where
 
