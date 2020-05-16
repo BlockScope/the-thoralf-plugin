@@ -30,8 +30,7 @@ scomp s@(SSym :: SSymbol s) s'@(SSym :: SSymbol s') =
     True -> unsafeCoerce Refl
     False -> forceCT @(DisEquality s s') DisRefl
 
--- Forcing Constraints
-
+-- | Forcing constraints.
 forceCT :: forall c x. (c => x) -> x
 forceCT x = case unsafeCoerce (Dict :: Dict ()) :: Dict c of
   (Dict :: Dict c) -> x

@@ -102,9 +102,6 @@ data DecCont where
 -- the converted list of kinds along with the given hash to ensure no
 -- declarations are repeated.
 
--- * Helpful functions
---------------------------------------------------------------------------------
-
 -- | Combining monadic theory encodings
 sumEncodings :: [TcPluginM TheoryEncoding] -> TcPluginM TheoryEncoding
 sumEncodings = fmap (foldl addEncodings emptyTheory) . sequence

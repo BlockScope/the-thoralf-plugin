@@ -9,15 +9,11 @@ import Data.Singletons.TypeLits hiding (SSymbol)
 import ThoralfPlugin.Singletons.Symbol (SSymbol)
 import ThoralfPlugin.Theory.UoM
 
--- | Interface
--------------------------------------------------------------
 data Unit :: UoM -> Type where
   MkUnit :: Double -> Unit m
 
 instance Show (Unit a) where
   show (MkUnit x) = show x
-
--- Note: we only expose this part of the interface:
 
 scalar :: Double -> Unit One
 scalar d = MkUnit d
@@ -40,14 +36,6 @@ div (MkUnit x) (MkUnit y) = MkUnit (x / y)
 extract :: Unit a -> Double
 extract (MkUnit d) = d
 
--------------------------------------------------------------
-
--- | Use Case
--------------------------------------------------------------
-
--- velocity: m/s
--- time: s
--- distance = velocity * time
 type Meters = FromList '[ '("meters", 1)]
 
 type Seconds = FromList '[ '("secs", 1)]
@@ -58,4 +46,4 @@ calcDistance ::
   Unit Seconds ->
   Unit Meters
 calcDistance a b = mult a b
--------------------------------------------------------------
+

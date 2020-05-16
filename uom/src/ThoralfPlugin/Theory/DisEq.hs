@@ -10,8 +10,6 @@ module ThoralfPlugin.Theory.DisEq
   )
 where
 
---import Data.Kind ( Constraint )
-
 class DisEquality (x :: k) (y :: k)
 
 data a :~?~: b where
