@@ -1,5 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeInType #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
 
 module ThoralfPlugin.Encode.UoM
   ( uomTheory,
@@ -20,6 +22,10 @@ import ThoralfPlugin.Encode.TheoryEncoding
 import TyCon (TyCon (..))
 import Type (Type, splitTyConApp_maybe)
 
+-- | An encoding for units of measure, for 'ThoralfPlugin.Theory.UoM.Base',
+-- 'ThoralfPlugin.Theory.UoM.One', and 'ThoralfPlugin.Theory.UoM.UoM' as well
+-- as for the hidden type families for multiplication and division of units,
+-- @(/:)@ and @(*:)@.
 uomTheory :: TcPluginM TheoryEncoding
 uomTheory = do
   (Found _ uomModule) <- findImportedModule fmModName (Just pkg)
