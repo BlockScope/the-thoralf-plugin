@@ -1,14 +1,20 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
 
 module ThoralfPlugin.Encode.TheoryEncoding
-  ( TheoryEncoding (..),
+  (
+  -- * Encoding
+  -- $theoryEncoding
+    TheoryEncoding (..),
     emptyTheory,
+  -- * Continuations
+  -- ** Type
     TyConvCont (..),
+  -- ** Kind
     KdConvCont (..),
+  -- ** Declaration
+  -- $decCont
     DecCont (..),
     sumEncodings,
     Vec (..),
@@ -21,14 +27,18 @@ import Data.Vec
 import TcRnTypes (TcPluginM)
 import Type (Kind, TyVar, Type)
 
--- | See $theoryEncoding
+-- | Predicated on type variables 'tyVarPreds' take the encoding of a type
+-- variable, and create SMT statements which can be asserted that restrict the
+-- variable in question. This is useful for restricting the domain of
+-- a converted type. For instance, if type level naturals are converted into
+-- SMT integers, asserting each integer variable is larger than zero is
+-- sensible.
 data TheoryEncoding where
   TheoryEncoding ::
     { kindConvs :: [Type -> Maybe KdConvCont],
       typeConvs :: [Type -> Maybe TyConvCont],
-      startDecs :: [String], -- Top level, never changing declarations
+      startDecs :: [String], -- ^ Top level, never changing declarations
 
-      -- | See $tvpred
       tyVarPreds :: TyVar -> Maybe [String]
     } ->
     TheoryEncoding
@@ -49,15 +59,6 @@ data TheoryEncoding where
 -- functions, these functions need to be unique per the kind of their
 -- arguments. These are continuations in 'DecCont'.
 
--- $tvpred
---
--- Predicated on type variables. These take the encoding of a type
--- variable, and create SMT statements which can be asserted that restrict
--- the variable in question. This is useful for restricting the domain of a
--- converted type. For instance, if type level naturals are converted into
--- SMT integers, asserting each integer variable is larger than zero is
--- sensible.
-
 -- | A Kind Conversion Continuation
 data KdConvCont where
   KdConvCont ::
@@ -76,8 +77,18 @@ data TyConvCont where
     } ->
     TyConvCont
 
--- $decCont
-
+-- | The 'decCont' are declaration continuations. These are data types for
+-- building local SMT declarations. SMT declarations are simply a list of
+-- strings that are valid SMT commands, after which some function symbol
+-- becomes meaningful and can be used when converting a type. These
+-- declarations are local because the definition of these function symbols
+-- depend on the sorts of their inputs. These sorts are determined by
+-- converting the kinds into a list of strings and feeding that to the
+-- 'decCont' function.  A 'DecCont' must satisfy the property that two
+-- declarations are the same if and only if the converted list of kinds and the
+-- hashes are the same.  So, to make each declaration different, an encoding
+-- must use a hash of the converted list of kinds along with the given hash to
+-- ensure no declarations are repeated.
 data DecCont where
   DecCont ::
     { decContKds :: Vec n Kind,
@@ -86,23 +97,8 @@ data DecCont where
     } ->
     DecCont
 
--- $decCont
---
--- These are declaration continuations. These are data types for building
--- local SMT declarations. SMT declarations are simply a list of strings
--- that are valid SMT commands, after which some function symbol becomes
--- meaningful and can be used when converting a type. These declarations
--- are local because the definition of these function symbols depend on the
--- sorts of their inputs. These sorts are determined by converting the
--- kinds into a list of strings and feeding that to the 'decCont' function.
---
--- A 'DecCont' must satisfy the property that two declarations are the same
--- if and only if the converted list of kinds and the hashes are the same.
--- So, to make each declaration different, an encoding must use a hash of
--- the converted list of kinds along with the given hash to ensure no
--- declarations are repeated.
 
--- | Combining monadic theory encodings
+-- | Combining monadic theory encodings.
 sumEncodings :: [TcPluginM TheoryEncoding] -> TcPluginM TheoryEncoding
 sumEncodings = fmap (foldl addEncodings emptyTheory) . sequence
 

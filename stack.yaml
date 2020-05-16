@@ -9,4 +9,3 @@ build:
     - "--show-all"
     - "--qual=none"
     - "--ignore-all-exports"
-    - "--theme=Ocean"
