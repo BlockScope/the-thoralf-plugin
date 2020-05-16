@@ -43,8 +43,5 @@ jobs:
         cabal v2-update
         cabal v2-build all --enable-tests
 
-    - name: rows
-      run: cabal v2-test rows --test-show-details=direct --test-option="--color=always"
-
     - name: units
       run: cabal v2-test units --test-show-details=direct --test-option="--color=always"

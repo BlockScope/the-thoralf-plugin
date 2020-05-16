@@ -37,17 +37,7 @@ in    defs
               ]
           }
       , tests =
-          { rows =
-              { dependencies =
-                  [ "base", "thoralf-plugin" ]
-              , ghc-options =
-                  [ "-Wall", "-fplugin ThoralfPlugin.Plugin" ]
-              , main =
-                  "Main.hs"
-              , source-dirs =
-                  "test-suite-rows"
-              }
-          , units =
+          { units =
               { dependencies =
                   [ "base"
                   , "QuickCheck"
