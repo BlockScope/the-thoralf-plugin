@@ -7,5 +7,6 @@ build:
     haddock-args:
     - "--odir=./docs"
     - "--show-all"
-    - "--qual=relative"
+    - "--qual=none"
     - "--ignore-all-exports"
+    - "--theme=Ocean"
