@@ -1,4 +1,5 @@
 resolver: lts-12.12
 packages:
    - thoralf
+   - uom
 extra-deps: [ simple-smt-0.8 ]

@@ -1,3 +1,4 @@
 with-compiler: ghc-8.4.4
 packages:
     thoralf
+    uom
