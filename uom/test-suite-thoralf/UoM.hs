@@ -37,7 +37,6 @@ extract :: Unit a -> Double
 extract (MkUnit d) = d
 
 type Meters = FromList '[ '("meters", 1)]
-
 type Seconds = FromList '[ '("secs", 1)]
 
 calcDistance ::
