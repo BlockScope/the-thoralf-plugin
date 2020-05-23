@@ -1,4 +1,4 @@
-    let defs = ./defaults.dhall
+    let defs = ./../defaults.dhall
 
 in    defs
     ⫽ { name =

@@ -4,34 +4,29 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8c1202dc1ff119336e9eca3660f336595d3908cf687a0dfeea9c76281a15af6c
+-- hash: 3e14094a07583a62a81aece01c8efa572e4fa9321e48e824badc5340dbe2e7e8
 
-name:                thoralf-plugin
-version:             0.1.0.0
-synopsis:            An extensible GHC typechecker plugin based on Z3
-description:         Thoralf is a small yet extensible typechecker plugin based on the
-                     Z3 SMT solver. It is designed to be easy to extend with new
-                     theories.
-license:             MIT
-license-file:        LICENSE
-author:              Divesh Otwani
-maintainer:          Ben Gamari
-category:            Development
-homepage:            https://github.com/bgamari/the-thoralf-plugin#readme
-bug-reports:         https://github.com/bgamari/the-thoralf-plugin/issues
-build-type:          Simple
-tested-with:         GHC == 8.4.4
+name:           thoralf-plugin
+version:        0.1.0.0
+synopsis:       An extensible GHC typechecker plugin based on Z3
+description:    Thoralf is a small yet extensible typechecker plugin based on the
+                Z3 SMT solver. It is designed to be easy to extend with new
+                theories.
+category:       Development
+homepage:       https://github.com/bgamari/the-thoralf-plugin#readme
+bug-reports:    https://github.com/bgamari/the-thoralf-plugin/issues
+author:         Divesh Otwani
+maintainer:     Ben Gamari
+license:        MIT
+license-file:   LICENSE
+tested-with:    GHC == 8.4.4
+build-type:     Simple
 
 source-repository head
   type: git
   location: https://github.com/bgamari/the-thoralf-plugin
 
 library
-  hs-source-dirs:
-      src
-  other-extensions: TypeFamilies TypeInType GADTs RecordWildCards
-  ghc-options: -Wall -fno-warn-partial-type-signatures
-  default-language: Haskell2010
   exposed-modules:
       ThoralfPlugin.Plugin
       ThoralfPlugin.ThoralfPlugin
@@ -52,6 +47,10 @@ library
       ThoralfPlugin.Encode.UoM
       ThoralfPlugin.Encode.Bool
       Data.Vec
+  hs-source-dirs:
+      src
+  other-extensions: TypeFamilies TypeInType GADTs RecordWildCards
+  ghc-options: -Wall -fno-warn-partial-type-signatures
   build-depends:
       base
     , containers
@@ -60,6 +59,7 @@ library
     , hashable
     , mtl
     , simple-smt
+  default-language: Haskell2010
 
 test-suite rows
   type: exitcode-stdio-1.0
