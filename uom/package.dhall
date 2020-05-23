@@ -49,19 +49,7 @@ in    defs
               [ "TypeFamilies", "TypeInType", "GADTs", "RecordWildCards" ]
           }
       , tests =
-          { rows =
-              { dependencies =
-                  [ "base", "thoralf-plugin" ]
-              , ghc-options =
-                  [ "-Wall", "-fplugin ThoralfPlugin.Plugin" ]
-              , other-modules =
-                  [ "FiniteMaps", "Nat", "RowTypes" ]
-              , main =
-                  "Main.hs"
-              , source-dirs =
-                  "test-suite-rows"
-              }
-          , units =
+          { units =
               { dependencies =
                   [ "base"
                   , "QuickCheck"

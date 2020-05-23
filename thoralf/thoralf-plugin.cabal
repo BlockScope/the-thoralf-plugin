@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3e14094a07583a62a81aece01c8efa572e4fa9321e48e824badc5340dbe2e7e8
+-- hash: 833f7bc953fae9dca19c9d81ab2a4c984a3b061c19c371848711ca9da33fb249
 
 name:           thoralf-plugin
 version:        0.1.0.0
@@ -79,30 +79,5 @@ test-suite rows
     , hashable
     , mtl
     , simple-smt
-    , thoralf-plugin
-  default-language: Haskell2010
-
-test-suite units
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  other-modules:
-      UoM
-  hs-source-dirs:
-      test-suite-units
-  ghc-options: -Wall -fno-warn-partial-type-signatures -Wall -fplugin ThoralfPlugin.Plugin
-  build-depends:
-      QuickCheck
-    , base
-    , containers
-    , ghc
-    , ghc-prim
-    , hashable
-    , mtl
-    , simple-smt
-    , singletons
-    , tasty
-    , tasty-hunit
-    , tasty-quickcheck
-    , tasty-th
     , thoralf-plugin
   default-language: Haskell2010

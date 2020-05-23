@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8577b725eb39322549636cfaf20dccdd5a7e06aa767d56b9d7722b95d48fe59d
+-- hash: b5fd0b18509322939ba884b11e463e6c8496e61e38f32a6bfce3fa3e68579e2a
 
 name:           thoralf-uom-plugin
 version:        0.1.0.0
@@ -59,27 +59,6 @@ library
     , hashable
     , mtl
     , simple-smt
-  default-language: Haskell2010
-
-test-suite rows
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  other-modules:
-      FiniteMaps
-      Nat
-      RowTypes
-  hs-source-dirs:
-      test-suite-rows
-  ghc-options: -Wall -fno-warn-partial-type-signatures -Wall -fplugin ThoralfPlugin.Plugin
-  build-depends:
-      base
-    , containers
-    , ghc
-    , ghc-prim
-    , hashable
-    , mtl
-    , simple-smt
-    , thoralf-plugin
   default-language: Haskell2010
 
 test-suite units

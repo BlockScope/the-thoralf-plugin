@@ -61,25 +61,5 @@ in    defs
               , source-dirs =
                   "test-suite-rows"
               }
-          , units =
-              { dependencies =
-                  [ "base"
-                  , "QuickCheck"
-                  , "singletons"
-                  , "thoralf-plugin"
-                  , "tasty"
-                  , "tasty-hunit"
-                  , "tasty-quickcheck"
-                  , "tasty-th"
-                  ]
-              , ghc-options =
-                  [ "-Wall", "-fplugin ThoralfPlugin.Plugin" ]
-              , other-modules =
-                  "UoM"
-              , main =
-                  "Main.hs"
-              , source-dirs =
-                  "test-suite-units"
-              }
           }
       }
