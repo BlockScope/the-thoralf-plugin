@@ -1,37 +1,47 @@
-{-# LANGUAGE TypeFamilies       #-}
-{-# LANGUAGE TypeInType         #-}
-{-# LANGUAGE TypeOperators      #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
 
 module ThoralfPlugin.Encode.TheoryEncoding
-  ( TheoryEncoding (..)
-  , emptyTheory
-  , TyConvCont (..)
-  , KdConvCont (..)
-  , DecCont (..)
-  , sumEncodings
+  (
+  -- * Encoding
+  -- $theoryEncoding
+    TheoryEncoding (..),
+    emptyTheory,
+  -- * Continuations
+  -- ** Type
+    TyConvCont (..),
+  -- ** Kind
+    KdConvCont (..),
+  -- ** Declaration
+  -- $decCont
+    DecCont (..),
+    sumEncodings,
+    Vec (..),
+    Nat (..),
+  )
+where
 
-  , Vec(..)
-  , Nat(..)
-  ) where
+import Control.Applicative ((<|>))
+import Data.Vec (Vec(..), Nat(..))
+import TcRnTypes (TcPluginM)
+import Type (Kind, TyVar, Type)
 
-
-import Control.Applicative ( (<|>) )
-import Type ( Type, Kind, TyVar )
-import TcRnTypes( TcPluginM )
-import Data.Vec
-
-
-
--- | See $theoryEncoding
+-- | Predicated on type variables 'tyVarPreds' take the encoding of a type
+-- variable, and create SMT statements which can be asserted that restrict the
+-- variable in question. This is useful for restricting the domain of
+-- a converted type. For instance, if type level naturals are converted into
+-- SMT integers, asserting each integer variable is larger than zero is
+-- sensible.
 data TheoryEncoding where
   TheoryEncoding ::
     { kindConvs :: [Type -> Maybe KdConvCont]
     , typeConvs :: [Type -> Maybe TyConvCont]
-    , startDecs :: [String]      -- Top level, never changing declarations
-    , tyVarPreds :: TyVar -> Maybe [String] -- ^ See $tvpred
-    } -> TheoryEncoding
+    , startDecs :: [String] -- ^ Top level, never changing declarations
+    , tyVarPreds :: TyVar -> Maybe [String]
+    } ->
+    TheoryEncoding
 
 -- $theoryEncoding
 --
@@ -49,23 +59,13 @@ data TheoryEncoding where
 -- functions, these functions need to be unique per the kind of their
 -- arguments. These are continuations in 'DecCont'.
 
--- $tvpred
---
--- Predicated on type variables. These take the encoding of a type
--- variable, and create SMT statements which can be asserted that restrict
--- the variable in question. This is useful for restricting the domain of a
--- converted type. For instance, if type level naturals are converted into
--- SMT integers, asserting each integer variable is larger than zero is
--- sensible.
-
-
 -- | A Kind Conversion Continuation
 data KdConvCont where
   KdConvCont ::
     { kdConvKinds :: Vec m Kind
     , kdConvCont :: Vec m String -> String
-    } -> KdConvCont
-
+    } ->
+    KdConvCont
 
 -- | A Type Conversion Continuation
 data TyConvCont where
@@ -74,63 +74,50 @@ data TyConvCont where
     , tyConvKinds :: Vec m Kind
     , tyConvCont :: Vec n String -> Vec m String -> String
     , tyConvDecs :: [DecCont]
-    } -> TyConvCont
+    } ->
+    TyConvCont
 
--- $decCont
+-- | The 'decCont' are declaration continuations. These are data types for
+-- building local SMT declarations. SMT declarations are simply a list of
+-- strings that are valid SMT commands, after which some function symbol
+-- becomes meaningful and can be used when converting a type. These
+-- declarations are local because the definition of these function symbols
+-- depend on the sorts of their inputs. These sorts are determined by
+-- converting the kinds into a list of strings and feeding that to the
+-- 'decCont' function.  A 'DecCont' must satisfy the property that two
+-- declarations are the same if and only if the converted list of kinds and the
+-- hashes are the same.  So, to make each declaration different, an encoding
+-- must use a hash of the converted list of kinds along with the given hash to
+-- ensure no declarations are repeated.
 data DecCont where
   DecCont ::
     { decContKds :: Vec n Kind
     , decContHash :: String
     , decCont :: Vec n String -> [String]
-    } -> DecCont
+    } ->
+    DecCont
 
-
--- $decCont
---
--- These are declaration continuations. These are data types for building
--- local SMT declarations. SMT declarations are simply a list of strings
--- that are valid SMT commands, after which some function symbol becomes
--- meaningful and can be used when converting a type. These declarations
--- are local because the definition of these function symbols depend on the
--- sorts of their inputs. These sorts are determined by converting the
--- kinds into a list of strings and feeding that to the 'decCont' function.
---
--- A 'DecCont' must satisfy the property that two declarations are the same
--- if and only if the converted list of kinds and the hashes are the same.
--- So, to make each declaration different, an encoding must use a hash of
--- the converted list of kinds along with the given hash to ensure no
--- declarations are repeated.
-
-
-
-
-
--- * Helpful functions
---------------------------------------------------------------------------------
-
-
--- | Combining monadic theory encodings
+-- | Combining monadic theory encodings.
 sumEncodings :: [TcPluginM TheoryEncoding] -> TcPluginM TheoryEncoding
 sumEncodings = fmap (foldl addEncodings emptyTheory) . sequence
 
-
 -- | An empty theory from which you can build any theory.
 emptyTheory :: TheoryEncoding
-emptyTheory = TheoryEncoding
-  { typeConvs = []
-  , kindConvs = []
-  , startDecs = []
-  , tyVarPreds = const Nothing
-  }
+emptyTheory =
+  TheoryEncoding
+    { typeConvs = []
+    , kindConvs = []
+    , startDecs = []
+    , tyVarPreds = const Nothing
+    }
 
 addEncodings :: TheoryEncoding -> TheoryEncoding -> TheoryEncoding
-addEncodings encode1 encode2 = TheoryEncoding
-  { typeConvs = typeConvs encode1 ++ typeConvs encode2
-  , kindConvs = kindConvs encode1 ++ kindConvs encode2
-  , startDecs = startDecs encode1 ++ startDecs encode2
-  , tyVarPreds =
-      \tvar -> (tyVarPreds encode1 tvar <|> tyVarPreds encode2 tvar)
-  }
-
-
-
+addEncodings
+  TheoryEncoding{typeConvs = t1, kindConvs = k1, startDecs = s1, tyVarPreds = p1}
+  TheoryEncoding{typeConvs = t2, kindConvs = k2, startDecs = s2, tyVarPreds = p2} =
+  TheoryEncoding{typeConvs = t', kindConvs = k', startDecs = s', tyVarPreds = p'}
+  where
+    t' = t1 ++ t2
+    k' = k1 ++ k2
+    s' = s1 ++ s2
+    p' tvar = p1 tvar <|> p2 tvar
