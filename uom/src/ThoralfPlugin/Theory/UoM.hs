@@ -21,11 +21,10 @@ module ThoralfPlugin.Theory.UoM
     , IsDiv
     ) where
 
-import GHC.Types (Symbol)
 import Data.Kind (Constraint)
 import GHC.TypeLits
 
-data UoM where {}
+data UoM
 
 type family One :: UoM where {}
 type family Base (measure :: Symbol) :: UoM where {}
