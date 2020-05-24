@@ -28,7 +28,7 @@ uomTheory = do
   return $ mkUoMEncoding baseTyCon oneTyCon divTyCon mulTyCon uomTyCon
   where
     fmModName = mkModuleName "ThoralfPlugin.Theory.UoM"
-    pkg = fsLit "thoralf-plugin"
+    pkg = fsLit "thoralf-uom-plugin"
 
 
 

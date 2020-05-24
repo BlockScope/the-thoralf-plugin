@@ -14,7 +14,7 @@ in    defs
       , category =
           "Development"
       , github =
-          "bgamari/the-thoralf-plugin"
+          "bgamari/the-thoralf-plugin/thoralf"
       , ghc-options =
           [ "-Wall", "-fno-warn-partial-type-signatures" ]
       , dependencies =

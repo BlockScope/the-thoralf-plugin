@@ -30,7 +30,7 @@ fmTheory = do
   return $ mkFmTheory (nil, alt, del, union, inter, fm)
   where
     fmModName = mkModuleName "ThoralfPlugin.Theory.FiniteMap"
-    pkg = fsLit "thoralf-plugin"
+    pkg = fsLit "thoralf-uom-plugin"
 
 
 

@@ -33,7 +33,7 @@ boolTheory = do
   where
     boolMod = mkModuleName "ThoralfPlugin.Theory.Bool"
     tyNatMod = mkModuleName "GHC.TypeNats"
-    pkg = fsLit "thoralf-plugin"
+    pkg = fsLit "thoralf-uom-plugin"
     base = fsLit "base"
 
     findTyCon :: Module -> String -> TcPluginM TyCon

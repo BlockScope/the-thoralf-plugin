@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 833f7bc953fae9dca19c9d81ab2a4c984a3b061c19c371848711ca9da33fb249
+-- hash: 6298cbd205c9864f5d8ef1321488d05fb453d8af3cf657bdf799285141d45347
 
 name:           thoralf-plugin
 version:        0.1.0.0
@@ -25,6 +25,7 @@ build-type:     Simple
 source-repository head
   type: git
   location: https://github.com/bgamari/the-thoralf-plugin
+  subdir: thoralf
 
 library
   exposed-modules:

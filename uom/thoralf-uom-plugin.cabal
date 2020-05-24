@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b5fd0b18509322939ba884b11e463e6c8496e61e38f32a6bfce3fa3e68579e2a
+-- hash: 7c5db38802fc6ff68d23f0b447a1db6e9621bd7018cecb1fa4bb044b8ec90bb0
 
 name:           thoralf-uom-plugin
 version:        0.1.0.0
@@ -25,6 +25,7 @@ build-type:     Simple
 source-repository head
   type: git
   location: https://github.com/bgamari/the-thoralf-plugin
+  subdir: uom
 
 library
   exposed-modules:
@@ -83,5 +84,6 @@ test-suite units
     , tasty-hunit
     , tasty-quickcheck
     , tasty-th
-    , thoralf-plugin
+    , template-haskell
+    , thoralf-uom-plugin
   default-language: Haskell2010

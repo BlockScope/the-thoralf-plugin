@@ -14,7 +14,7 @@ in    defs
       , category =
           "Development"
       , github =
-          "bgamari/the-thoralf-plugin"
+          "bgamari/the-thoralf-plugin/uom"
       , ghc-options =
           [ "-Wall", "-fno-warn-partial-type-signatures" ]
       , dependencies =
@@ -54,7 +54,8 @@ in    defs
                   [ "base"
                   , "QuickCheck"
                   , "singletons"
-                  , "thoralf-plugin"
+                  , "thoralf-uom-plugin"
+                  , "template-haskell"
                   , "tasty"
                   , "tasty-hunit"
                   , "tasty-quickcheck"

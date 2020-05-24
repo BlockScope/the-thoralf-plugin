@@ -99,7 +99,7 @@ mkThoralfInit debug seed = do
   where
 
     disEqName = mkModuleName "ThoralfPlugin.Theory.DisEq"
-    pkgName = fsLit "thoralf-plugin"
+    pkgName = fsLit "thoralf-uom-plugin"
 
     findClass :: Module -> String -> TcPluginM Class
     findClass md strNm = do
