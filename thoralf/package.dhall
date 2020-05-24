@@ -32,7 +32,6 @@ in    defs
               , "ThoralfPlugin.Singletons.Nat"
               , "ThoralfPlugin.Theory.DisEq"
               , "ThoralfPlugin.Theory.FiniteMap"
-              , "ThoralfPlugin.Theory.UoM"
               , "ThoralfPlugin.Theory.Bool"
               ]
           , other-modules =
@@ -41,7 +40,6 @@ in    defs
               , "ThoralfPlugin.Encode.Nat"
               , "ThoralfPlugin.Encode.FiniteMap"
               , "ThoralfPlugin.Encode.Symbol"
-              , "ThoralfPlugin.Encode.UoM"
               , "ThoralfPlugin.Encode.Bool"
               , "Data.Vec"
               ]

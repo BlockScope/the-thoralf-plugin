@@ -7,7 +7,6 @@ import ThoralfPlugin.Encode.TheoryEncoding
 
 import ThoralfPlugin.Encode.Nat ( natTheory )
 import ThoralfPlugin.Encode.FiniteMap ( fmTheory )
-import ThoralfPlugin.Encode.UoM ( uomTheory )
 import ThoralfPlugin.Encode.Symbol ( symbolTheory )
 import ThoralfPlugin.Encode.Bool ( boolTheory )
 
@@ -18,7 +17,6 @@ thoralfTheories = sumEncodings
   , fmTheory
   , symbolTheory
   , boolTheory
-  , uomTheory
   ]
 
 
