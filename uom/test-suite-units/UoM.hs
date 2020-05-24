@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeFamilies, GADTs, DataKinds #-}
-
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds #-}
 {-# OPTIONS_GHC -fplugin ThoralfPlugin.Plugin #-}
 
 module UoM where
@@ -9,21 +10,16 @@ import Data.Singletons.TypeLits hiding (SSymbol)
 import ThoralfPlugin.Singletons.Symbol (SSymbol)
 import ThoralfPlugin.Theory.UoM
 
--- | Interface
--------------------------------------------------------------
-
 data Unit :: UoM -> Type where
   MkUnit :: Double -> Unit m
 
 instance Show (Unit a) where
     show (MkUnit x) = show x
 
--- Note: we only expose this part of the interface:
-
 scalar :: Double -> Unit One
 scalar d = MkUnit d
 
-mkUnit :: IsBase s n b => Double -> SSymbol s -> SNat n -> Unit b
+mkUnit :: IsPow s n b => Double -> SSymbol s -> SNat n -> Unit b
 mkUnit d _ _ = MkUnit d
 
 add :: Unit a -> Unit a -> Unit a
@@ -40,12 +36,6 @@ div (MkUnit x) (MkUnit y) = MkUnit (x / y)
 
 extract :: Unit a -> Double
 extract (MkUnit d) = d
--------------------------------------------------------------
-
-
-
--- | Use Case
--------------------------------------------------------------
 
 -- velocity: m/s
 -- time: s
@@ -59,5 +49,3 @@ calcDistance
     -> Unit Seconds
     -> Unit Meters
 calcDistance a b = mult a b
-
--------------------------------------------------------------

@@ -1,69 +1,82 @@
-{-# LANGUAGE TypeFamilies, TypeInType, TypeOperators,
-    GADTs, RecordWildCards, StandaloneDeriving
-#-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeInType #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
 
-module ThoralfPlugin.Encode.UoM ( uomTheory ) where
+module ThoralfPlugin.Encode.UoM (uomTheory) where
 
-import TyCon ( TyCon(..) )
-import Type ( Type, splitTyConApp_maybe )
-import TcPluginM ( tcLookupTyCon, lookupOrig
-                 , findImportedModule, FindResult(..)
-                 , TcPluginM
-                 )
-import OccName ( mkTcOcc )
-import Module ( Module, mkModuleName )
-import FastString ( fsLit )
-
+import FastString (fsLit)
+import Module (Module, mkModuleName)
+import OccName (mkTcOcc)
+import TcPluginM
+  (FindResult(..), TcPluginM, findImportedModule, lookupOrig, tcLookupTyCon)
 import ThoralfPlugin.Encode.TheoryEncoding
+import TyCon (TyCon(..))
+import Type (Type, splitTyConApp_maybe)
 
-
+-- | An encoding for units of measure, for 'ThoralfPlugin.Theory.UoM.Base',
+-- 'ThoralfPlugin.Theory.UoM.One', and 'ThoralfPlugin.Theory.UoM.UoM' as well
+-- as for the hidden type families for multiplication and division of units,
+-- @(/:)@ and @(*:)@.
 uomTheory :: TcPluginM TheoryEncoding
 uomTheory = do
   (Found _ uomModule) <- findImportedModule fmModName (Just pkg)
   baseTyCon <- findTyCon uomModule "Base"
+  powTyCon <- findTyCon uomModule "Pow"
   oneTyCon <- findTyCon uomModule "One"
   divTyCon <- findTyCon uomModule "/:"
   mulTyCon <- findTyCon uomModule "*:"
   uomTyCon <- findTyCon uomModule "UoM"
-  return $ mkUoMEncoding baseTyCon oneTyCon divTyCon mulTyCon uomTyCon
+  return $ mkUoMEncoding baseTyCon powTyCon oneTyCon divTyCon mulTyCon uomTyCon
   where
     fmModName = mkModuleName "ThoralfPlugin.Theory.UoM"
     pkg = fsLit "thoralf-uom-plugin"
 
-
-
 findTyCon :: Module -> String -> TcPluginM TyCon
 findTyCon md strNm = do
-    name <- lookupOrig md (mkTcOcc strNm)
-    tcLookupTyCon name
+  name <- lookupOrig md (mkTcOcc strNm)
+  tcLookupTyCon name
 
-
-mkUoMEncoding :: TyCon -> TyCon -> TyCon -> TyCon -> TyCon -> TheoryEncoding
-mkUoMEncoding base one div' mult uom =  emptyTheory
-  { typeConvs =
-    [ baseConvert base
-    , oneConvert one
-    , divConvert div'
-    , mulConvert mult
-    ]
-  , kindConvs = [uomConvert uom]
-  }
-
+mkUoMEncoding :: TyCon -> TyCon -> TyCon -> TyCon -> TyCon -> TyCon -> TheoryEncoding
+mkUoMEncoding base pow one div' mult uom =
+  emptyTheory
+    { typeConvs =
+        [ baseConvert base
+        , powConvert pow
+        , oneConvert one
+        , divConvert div'
+        , mulConvert mult
+        ],
+      kindConvs = [uomConvert uom]
+    }
 
 baseConvert :: TyCon -> Type -> Maybe TyConvCont
 baseConvert base ty = do
+  (tcon, (measure : _)) <- splitTyConApp_maybe ty
+  case tcon == base of
+    False -> Nothing
+    True ->
+      let tyList = measure :> VNil
+      in Just $ TyConvCont tyList VNil baseString []
+
+powConvert :: TyCon -> Type -> Maybe TyConvCont
+powConvert base ty = do
   (tcon, (measure : power : _)) <- splitTyConApp_maybe ty
   case tcon == base of
     False -> Nothing
-    True -> let tyList =  measure :> power :> VNil in
-      Just $ TyConvCont tyList VNil baseString []
+    True ->
+      let tyList = measure :> power :> VNil
+      in Just $ TyConvCont tyList VNil powString []
 
+baseString :: Vec One String -> Vec 'Zero String -> String
+baseString (measure :> VNil) VNil =
+  let one = "((as const (Array String Int)) 0)"
+  in "(store " ++ one ++ " " ++ measure ++ " 1)"
 
-baseString :: Vec Two String -> Vec 'Zero String -> String
-baseString (measure :> power :> VNil) VNil =
-  let one = "((as const (Array String Int)) 0)" in
-  "(store " ++ one ++ " " ++ measure ++ " " ++ power ++ ")"
-
+powString :: Vec Two String -> Vec 'Zero String -> String
+powString (measure :> power :> VNil) VNil =
+  let one = "((as const (Array String Int)) 0)"
+  in "(store " ++ one ++ " " ++ measure ++ " " ++ power ++ ")"
 
 oneConvert :: TyCon -> Type -> Maybe TyConvCont
 oneConvert one ty = do
@@ -74,24 +87,21 @@ oneConvert one ty = do
       let one' = "((as const (Array String Int)) 0)" in
       Just $ TyConvCont VNil VNil (const . const $ one') []
 
-
-
 divConvert :: TyCon -> Type -> Maybe TyConvCont
 divConvert divTycon ty = do
   (tcon, (n : m : _)) <- splitTyConApp_maybe ty
   case tcon == divTycon of
     False -> Nothing
     True ->
-      let tyList = n :> m :> VNil in
-      Just $ TyConvCont tyList VNil divString []
+      let tyList = n :> m :> VNil
+      in Just $ TyConvCont tyList VNil divString []
 
-
+type One = 'Succ 'Zero
 type Two = 'Succ ('Succ 'Zero)
+
 divString :: Vec Two String -> Vec 'Zero String -> String
 divString (n :> m :> VNil) VNil =
-    "((_ map (- (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
-
-
+  "((_ map (- (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
 
 mulConvert :: TyCon -> Type -> Maybe TyConvCont
 mulConvert mult ty = do
@@ -99,15 +109,12 @@ mulConvert mult ty = do
   case tcon == mult of
     False -> Nothing
     True ->
-      let tyList = n :> m :> VNil in
-      Just $ TyConvCont tyList VNil mulString []
-
+      let tyList = n :> m :> VNil
+      in Just $ TyConvCont tyList VNil mulString []
 
 mulString :: Vec Two String -> Vec 'Zero String -> String
 mulString (n :> m :> VNil) VNil =
-    "((_ map (+ (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
-
-
+  "((_ map (+ (Int Int) Int)) " ++ n ++ " " ++ m ++ ")"
 
 uomConvert :: TyCon -> Type -> Maybe KdConvCont
 uomConvert uom ty = do
@@ -115,5 +122,3 @@ uomConvert uom ty = do
   case tcon == uom of
     False -> Nothing
     True -> Just $ KdConvCont VNil (const "(Array String Int)")
-
-
